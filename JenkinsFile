@@ -9,7 +9,7 @@ pipeline {
     stages {
         stage('Clone repository') {
             steps {
-                git 'https://github.com/your-repo.git'
+                git 'https://github.com/burhan121002/technical.git'
             }
         }
         stage('Build Docker Image') {
