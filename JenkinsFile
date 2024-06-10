@@ -1,1 +1,58 @@
+pipeline {
+    agent any
 
+    environment {
+        DOCKER_IMAGE = 'my-repo'
+        ECR_REGISTRY = 'xxxxxxxxxxxx.dkr.ecr.us-west-2.amazonaws.com'
+    }
+
+    stages {
+        stage('Clone repository') {
+            steps {
+                git 'https://github.com/your-repo.git'
+            }
+        }
+        stage('Build Docker Image') {
+            steps {
+                script {
+                    dockerImage = docker.build("${ECR_REGISTRY}/${DOCKER_IMAGE}:latest")
+                }
+            }
+        }
+        stage('Login to AWS ECR') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'aws-access', usernameVariable: 'AWS_ACCESS_KEY_ID', passwordVariable: 'AWS_SECRET_ACCESS_KEY')]) {
+                    script {
+                        sh 'aws ecr get-login-password --region us-west-2 | docker login --username AWS --password-stdin ${ECR_REGISTRY}'
+                    }
+                }
+            }
+        }
+        stage('Push Docker Image') {
+            steps {
+                script {
+                    docker.withRegistry("https://${ECR_REGISTRY}", '') {
+                        dockerImage.push()
+                    }
+                }
+            }
+        }
+        stage('Deploy with Terraform') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'aws-access', usernameVariable: 'AWS_ACCESS_KEY_ID', passwordVariable: 'AWS_SECRET_ACCESS_KEY')]) {
+                    sh 'terraform init'
+                    sh 'terraform apply -auto-approve'
+                }
+            }
+        }
+        stage('Test Lambda Function') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'aws-access', usernameVariable: 'AWS_ACCESS_KEY_ID', passwordVariable: 'AWS_SECRET_ACCESS_KEY')]) {
+                    script {
+                        sh 'aws lambda invoke --function-name my_lambda_function out.txt'
+                    }
+                }
+            }
+        }
+    }
+}
