@@ -32,7 +32,7 @@ if __name__ == "__main__":
 
     # Update the bucket name and file key with Terraform created values
     bucket_name = "my-s3-bucket"  # Update with your bucket name
-    file_key = "path/to/your/file.csv"  # Update with the file key in S3
+    file_key = "Dockerfile"  # Update with the file key in S3
 
     # Update RDS parameters with Terraform created values
     db_host = "mydb.cabcdefg123.us-west-2.rds.amazonaws.com"  # Update with your RDS endpoint
