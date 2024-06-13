@@ -8,8 +8,8 @@ pipeline {
     stages {
         stage('Clone Git') {
             steps {
-                git url: 'https://github.com/burhan121002/technical.git'
-            }
+                git url: 'https://github.com/burhan121002/technical.git' , branch: 'main'
+             }
         }
         stage('Build Docker Image') {
             steps {
