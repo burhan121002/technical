@@ -23,7 +23,7 @@ pipeline {
         stage('Push to ECR') {
             steps {
                 script {
-                    docker.withRegistry('https://your-aws-account-id.dkr.ecr.your-region.amazonaws.com', 'aws-credentials') {
+                    docker.withRegistry('654654311847.dkr.ecr.your-region.amazonaws.com', 'aws-credentials') {
                         dockerImage.push()
                     }
                 }
