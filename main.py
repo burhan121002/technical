@@ -1,44 +1,66 @@
 import boto3
-import psycopg2
-import os
+from botocore.exceptions import NoCredentialsError, PartialCredentialsError, ClientError
 
-def read_from_s3(bucket_name, file_key):
-    s3 = boto3.client('s3')
-    s3_object = s3.get_object(Bucket=bucket_name, Key=file_key)
-    data = s3_object['Body'].read().decode('utf-8')
-    return data
+# S3 configurations
+s3 = boto3.client('s3')
+bucket_name = 'testtss'
+file_key = 'aws blog.txt'
 
-def push_to_rds(data, db_host, db_name, db_user, db_password):
-    conn = psycopg2.connect(
-        host=db_host,
-        database=db_name,
-        user=db_user,
-        password=db_password
+# Glue configurations
+glue_database = 'your-glue-database'
+glue_table_name = 'your-glue-table'
+
+def read_from_s3():
+    try:
+        obj = s3.get_object(Bucket=bucket_name, Key=file_key)
+        text_data = obj['Body'].read().decode('utf-8')
+        return text_data
+    except (NoCredentialsError, PartialCredentialsError):
+        print("Credentials not available")
+        return None
+    except ClientError as e:
+        print(f"Error fetching file from S3: {e}")
+        return None
+
+def update_glue_table():
+    glue = boto3.client('glue')
+
+    # Since it's a text file, we assume a single column 'content'
+    column_types = [
+        {
+            'Name': 'content',
+            'Type': 'string'
+        }
+    ]
+
+    response = glue.update_table(
+        DatabaseName=glue_database,
+        TableInput={
+            'Name': glue_table_name,
+            'StorageDescriptor': {
+                'Columns': column_types,
+                'Location': f's3://{bucket_name}/{file_key}',
+                'InputFormat': 'org.apache.hadoop.mapred.TextInputFormat',
+                'OutputFormat': 'org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat',
+                'Compressed': False,
+                'SerdeInfo': {
+                    'SerializationLibrary': 'org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe',
+                    'Parameters': {'serialization.format': '1'}
+                },
+            },
+        }
     )
-    cur = conn.cursor()
-    # Assuming data is a CSV and we are inserting it into a table named 'my_table'
-    cur.execute("COPY my_table FROM STDIN WITH CSV", data)
-    conn.commit()
-    cur.close()
-    conn.close()
+    print("Glue table updated")
+    return response
 
+def lambda_handler(event, context):
+    text_data = read_from_s3()
+    if text_data is not None:
+        print("File content:")
+        print(text_data)
+        update_glue_table()
+
+# This part of the code ensures that if you run the script locally,
+# it will still execute the `main()` function.
 if __name__ == "__main__":
-    bucket_name = os.getenv('S3_BUCKET_NAME')
-    file_key = os.getenv('S3_FILE_KEY')
-    db_host = os.getenv('DB_HOST')
-    db_name = os.getenv('DB_NAME')
-    db_user = os.getenv('DB_USER')
-    db_password = os.getenv('DB_PASSWORD')
-
-    # Update the bucket name and file key with Terraform created values
-    bucket_name = "my-s3-bucket"  # Update with your bucket name
-    file_key = "Dockerfile"  # Update with the file key in S3
-
-    # Update RDS parameters with Terraform created values
-    db_host = "mydb.cabcdefg123.us-west-2.rds.amazonaws.com"  # Update with your RDS endpoint
-    db_name = "mydb"  # Update with your RDS database name
-    db_user = "admin"  # Update with your RDS username
-    db_password = "password"  # Update with your RDS password
-
-    data = read_from_s3(bucket_name, file_key)
-    push_to_rds(data, db_host, db_name, db_user, db_password)
+    lambda_handler(None, None)
