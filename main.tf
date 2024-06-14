@@ -18,7 +18,7 @@ variable "aws_region" {
 variable "image_tag" {
   description = "Tag of the Docker image to deploy"
   type        = string
-  default     = "latest"  # Default to latest if not provided explicitly
+  default     = "26"  # Default to latest if not provided explicitly
 }
 
 resource "aws_s3_bucket" "data_bucket" {
