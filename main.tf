@@ -1,32 +1,32 @@
 provider "aws" {
-  region = "ap-south-1"  # Replace with your desired AWS region
+  region = "ap-south-1"  
 }
 
 # Variables
 variable "aws_account_id" {
   description = "AWS Account ID"
   type        = string
-  default     = "654654311847"  # Replace with your AWS Account ID
+  default     = "654654311847"  
 }
 
 variable "aws_region" {
   description = "AWS Region"
   type        = string
-  default     = "ap-south-1"  # Replace with your desired AWS region
+  default     = "ap-south-1"  
 }
 
 variable "image_tag" {
   description = "Tag of the Docker image to deploy"
   type        = string
-  default     = "26"  # Default to latest if not provided explicitly
+  default     = "26"  
 }
 
 resource "aws_s3_bucket" "data_bucket" {
-  bucket = "testtss"  # Ensure this matches the bucket name used in your Python script
+  bucket = "testtss" 
 }
 
 resource "aws_glue_catalog_database" "glue_db" {
-  name = "your-glue-database"  # Ensure this matches the database name used in your Python script
+  name = "your-glue-database"  
 }
 
 resource "aws_glue_catalog_table" "glue_table" {
@@ -35,11 +35,11 @@ resource "aws_glue_catalog_table" "glue_table" {
 
   storage_descriptor {
     columns {
-      name = "content"  # This matches the single column name in your Python script
+      name = "content"  
       type = "string"
     }
 
-    location      = "s3://testtss/aws blog.txt"  # Ensure this location matches the S3 path in your Python script
+    location      = "s3://testtss/aws blog.txt"  
     input_format  = "org.apache.hadoop.mapred.TextInputFormat"
     output_format = "org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat"
 
@@ -78,6 +78,6 @@ resource "aws_lambda_function" "data_processor" {
   function_name    = "your-lambda-function"  # Replace with your desired Lambda function name
   role             = aws_iam_role.lambda_exec.arn
   package_type     = "Image"
-  image_uri        = "${var.aws_account_id}.dkr.ecr.${var.aws_region}.amazonaws.com/your-repo-name:${var.image_tag}"  # Use variables for flexibility
+  image_uri        = "${var.aws_account_id}.dkr.ecr.${var.aws_region}.amazonaws.com/your-repo-name:${var.image_tag}"  
   timeout          = 900
 }
