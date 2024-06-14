@@ -1,26 +1,43 @@
 provider "aws" {
-  region = "ap-south-1" # Replaced with your AWS region
+  region = "ap-south-1"  # Replace with your desired AWS region
+}
+
+# Variables
+variable "aws_account_id" {
+  description = "AWS Account ID"
+  type        = string
+}
+
+variable "aws_region" {
+  description = "AWS Region"
+  type        = string
+}
+
+variable "image_tag" {
+  description = "Tag of the Docker image to deploy"
+  type        = string
+  default     = "latest"  # Default to latest if not provided explicitly
 }
 
 resource "aws_s3_bucket" "data_bucket" {
-  bucket = "testtss" # Ensure this matches the bucket name used in your Python script
+  bucket = "testtss"  # Ensure this matches the bucket name used in your Python script
 }
 
 resource "aws_glue_catalog_database" "glue_db" {
-  name = "your-glue-database" # Ensure this matches the database name used in your Python script
+  name = "your-glue-database"  # Ensure this matches the database name used in your Python script
 }
 
 resource "aws_glue_catalog_table" "glue_table" {
-  name          = "your-glue-table" # Ensure this matches the table name used in your Python script
+  name          = "your-glue-table"  # Ensure this matches the table name used in your Python script
   database_name = aws_glue_catalog_database.glue_db.name
 
   storage_descriptor {
     columns {
-      name = "content" # This matches the single column name in your Python script
+      name = "content"  # This matches the single column name in your Python script
       type = "string"
     }
 
-    location      = "s3://testtss/aws blog.txt" # Ensure this location matches the S3 path in your Python script
+    location      = "s3://testtss/aws blog.txt"  # Ensure this location matches the S3 path in your Python script
     input_format  = "org.apache.hadoop.mapred.TextInputFormat"
     output_format = "org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat"
 
@@ -56,9 +73,9 @@ resource "aws_iam_role_policy_attachment" "lambda_policy" {
 }
 
 resource "aws_lambda_function" "data_processor" {
-  function_name    = "your-lambda-function" # Replace with your desired Lambda function name
+  function_name    = "your-lambda-function"  # Replace with your desired Lambda function name
   role             = aws_iam_role.lambda_exec.arn
   package_type     = "Image"
-  image_uri        = "your-aws-account-id.dkr.ecr.ap-south-1.amazonaws.com/your-repo-name:latest" # Replace with your actual ECR image URI
+  image_uri        = "${var.aws_account_id}.dkr.ecr.${var.aws_region}.amazonaws.com/your-repo-name:${var.image_tag}"  # Use variables for flexibility
   timeout          = 900
 }
