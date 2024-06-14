@@ -3,6 +3,12 @@ pipeline {
 
     environment {
         AWS_DEFAULT_REGION = 'ap-south-1'
+        AWS_ACCOUNT_ID = '654654311847'
+        
+        // WARNING: Never commit these to version control!
+        // Use only for local testing and immediately remove/revoke after use.
+        AWS_ACCESS_KEY_ID = 'AKIAZQ3DQBWT6BIRFIYP'
+        AWS_SECRET_ACCESS_KEY = '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'
     }
 
     stages {
@@ -12,10 +18,21 @@ pipeline {
             }
         }
 
+        stage('Create ECR Repository') {
+            steps {
+                script {
+                    sh """
+                    aws ecr describe-repositories --repository-names your-repo-name --region ${AWS_DEFAULT_REGION} || \
+                    aws ecr create-repository --repository-name your-repo-name --region ${AWS_DEFAULT_REGION}
+                    """
+                }
+            }
+        }
+
         stage('Build Docker Image') {
             steps {
                 script {
-                    dockerImage = docker.build('your-repo-name')
+                    dockerImage = docker.build("${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com/your-repo-name:26")
                 }
             }
         }
@@ -23,24 +40,20 @@ pipeline {
         stage('Push to ECR') {
             steps {
                 script {
-                    docker.withRegistry('654654311847.dkr.ecr.your-region.amazonaws.com', 'aws-credentials') {
-                        dockerImage.push()
-                    }
+                    sh "aws ecr get-login-password --region ${AWS_DEFAULT_REGION} | docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com"
+                    sh "docker push ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com/your-repo-name:26"
                 }
             }
         }
 
         stage('Deploy with Terraform') {
             steps {
-                withCredentials([[
-                    $class: 'AmazonWebServicesCredentialsBinding',
-                    accessKeyVariable: 'AWS_ACCESS_KEY_ID',
-                    secretKeyVariable: 'AWS_SECRET_ACCESS_KEY',
-                    credentialsId: 'aws-credentials'
-                ]]) {
-                    sh 'terraform init'
-                    sh 'terraform apply -auto-approve'
-                }
+                sh 'terraform init'
+                sh """
+                terraform apply -auto-approve \
+                    -var="aws_access_key=${AWS_ACCESS_KEY_ID}" \
+                    -var="aws_secret_key=${AWS_SECRET_ACCESS_KEY}"
+                """
             }
         }
     }
