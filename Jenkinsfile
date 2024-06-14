@@ -5,10 +5,10 @@ pipeline {
         AWS_DEFAULT_REGION = 'ap-south-1'
         AWS_ACCOUNT_ID = '654654311847'
         
-        // WARNING: Never commit these to version control!
-        // Use only for local testing and immediately remove/revoke after use.
+        
         AWS_ACCESS_KEY_ID = 'AKIAZQ3DQBWT6BIRFIYP'
         AWS_SECRET_ACCESS_KEY = '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'
+     ##(not recommended to use aws credentials in the script in for real use cases , use jenkins manage credentials plugin )
     }
 
     stages {
