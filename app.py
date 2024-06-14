@@ -60,7 +60,6 @@ def lambda_handler(event, context):
         print(text_data)
         update_glue_table()
 
-# This part of the code ensures that if you run the script locally,
-# it will still execute the `main()` function.
+
 if __name__ == "__main__":
     lambda_handler(None, None)
