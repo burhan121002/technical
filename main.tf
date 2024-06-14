@@ -6,11 +6,13 @@ provider "aws" {
 variable "aws_account_id" {
   description = "AWS Account ID"
   type        = string
+  default     = "654654311847"  # Replace with your AWS Account ID
 }
 
 variable "aws_region" {
   description = "AWS Region"
   type        = string
+  default     = "ap-south-1"  # Replace with your desired AWS region
 }
 
 variable "image_tag" {
