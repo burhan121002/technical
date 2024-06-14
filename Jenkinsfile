@@ -9,6 +9,7 @@ pipeline {
         AWS_ACCESS_KEY_ID = 'AKIAZQ3DQBWT6BIRFIYP'
         AWS_SECRET_ACCESS_KEY = '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'
      ##(not recommended to use aws credentials in the script in for real use cases , use jenkins manage credentials plugin )
+      (for testing purpose immediately delete the keys after testing)
     }
 
     stages {
